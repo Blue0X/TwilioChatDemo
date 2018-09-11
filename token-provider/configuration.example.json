@@ -1,0 +1,10 @@
+{
+  "tokenGenerator": {
+    "accountSid": "AC*******",
+    "serviceSid": "IS*******",
+    "signingKeySid": "SK******",
+    "signingKeySecret": "*******",
+    "fcm": "CRxxx",
+    "apns": "CRxxx"
+  }
+}

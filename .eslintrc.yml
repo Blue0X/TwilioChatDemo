@@ -1,0 +1,30 @@
+extends: skyscanner
+env:
+  jest: true
+rules:
+  "react/jsx-filename-extension": 0
+  "global-require": 0
+  "max-len":
+    - 2
+    - 120
+  "no-case-declarations": 0
+  "dot-notation":
+    - "error"
+    - "allowPattern": "^[a-z]+(_[a-z]+)+$"
+  "import/no-extraneous-dependencies":
+    - "error"
+    - devDependencies:
+      - "storybook/**/*.js"
+      - "**/stories.js"
+      - "**/*.story.js"
+      - "**/storybook.js"
+      - "tests/**/*.js"
+      - "**/__tests__/**/*.js"
+      - "**/*.test.js"
+settings:
+  import/resolver:
+    node:
+      extensions:
+        - .js
+        - .android.js
+        - .ios.js
