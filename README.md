@@ -2,7 +2,7 @@
 A react-native chat project with Twilio JS SDK
 
 
-![](https://raw.githubusercontent.com/Blue0X/TwilioChatDemo/master/assets/demo.png =250px)
+<img src="https://raw.githubusercontent.com/Blue0X/TwilioChatDemo/master/assets/demo.png" height="500"/>
 
 ## Native dependencies
 
