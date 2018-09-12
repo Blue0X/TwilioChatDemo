@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, Button, Modal, SafeAreaView } from 'react-native';
+import { StyleSheet, Text, View, Button, Modal, SafeAreaView, Platform, PermissionsAndroid } from 'react-native';
 import { Client as TwilioChatClient } from 'twilio-chat';
 import { GiftedChat } from 'react-native-gifted-chat';
 import CameraRollPicker from 'react-native-camera-roll-picker';
@@ -7,8 +7,9 @@ import RNFetchBlob from 'rn-fetch-blob';
 import CustomMessageImage from './CustomMessageImage';
 
 async function getToken(identity) {
+  const host = Platform.OS === 'ios' ? 'localhost' : '10.0.3.2';
   // eslint-disable-next-line no-undef
-  const res = await fetch(`http://localhost:3002/token?identity=${identity}`);
+  const res = await fetch(`http://${host}:3002/token?identity=${identity}`);
   return res.json();
 }
 
@@ -48,11 +49,15 @@ export default class App extends Component {
       messageIndex: 0,
       modalVisible: false,
       uploading: false,
+      showBtn: true,
     };
   }
 
   componentDidMount() {
     this.initializeMessenging();
+    if (Platform.OS === 'android') {
+      this.requestPermission();
+    }
   }
 
   componentWillUnmount() {
@@ -100,6 +105,23 @@ export default class App extends Component {
 
   selectImages = (images) => {
     this.images = images;
+  }
+
+  async requestPermission() {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+        {
+          title: 'Permission',
+          message: 'This app needs access to your camera roll',
+        },
+      );
+      if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+        this.setState({ showBtn: false });
+      }
+    } catch (err) {
+      console.warn(err);
+    }
   }
 
   async initializeMessenging() {
@@ -202,7 +224,10 @@ export default class App extends Component {
               renderMessageImage={props => <CustomMessageImage {...props} />}
               renderFooter={this.renderFooter}
             />
-            <Button title="Send photo" onPress={this.onSendPhoto} />
+            {
+              this.state.showBtn &&
+              <Button title="Send photo" onPress={this.onSendPhoto} />
+            }
             <Modal
               animationType="slide"
               transparent={false}
