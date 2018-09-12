@@ -20,6 +20,16 @@ const STYLES = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  footerContainer: {
+    marginTop: 5,
+    marginLeft: 10,
+    marginRight: 10,
+    marginBottom: 10,
+  },
+  footerText: {
+    fontSize: 14,
+    color: '#aaa',
+  },
 });
 
 export default class App extends Component {
@@ -36,6 +46,7 @@ export default class App extends Component {
       isLoadingEarlier: false,
       messageIndex: 0,
       modalVisible: false,
+      uploading: false,
     };
   }
 
@@ -56,11 +67,8 @@ export default class App extends Component {
   onLoadEarlier = () => {
     this.setState({ isLoadingEarlier: true });
     this.channel.getMessages(30, this.state.messageIndex - 1).then((messages) => {
-      const mapped = messages.items.map(message => this.parseMessage(message)).reverse();
-      this.setState({ messages: [...this.state.messages, ...mapped] });
+      this.handleBatch(messages);
       this.setState({
-        loadEarlier: messages.hasPrevPage,
-        messageIndex: messages.items[0].index,
         isLoadingEarlier: false,
       });
     });
@@ -74,14 +82,14 @@ export default class App extends Component {
     this.setState({ modalVisible: false });
     // console.log(this.images);
     if (!this.images.length) return;
-
+    this.setState({ uploading: true });
     RNFetchBlob.fs.readFile(this.images[0].uri, 'base64').then((data) => {
       const { Buffer } = require('buffer/');
       const media = Buffer.from(data, 'base64');
       this.channel.sendMessage({
         contentType: 'image/png',
         media,
-      });
+      }).then(() => this.setState({ uploading: false }));
     });
   }
 
@@ -118,13 +126,7 @@ export default class App extends Component {
 
     this.channel.on('messageAdded', message => this.handleReceive(message));
     this.channel.getMessages(30).then((messages) => {
-      // console.log(messages);
-      const mapped = messages.items.map(message => this.parseMessage(message)).reverse();
-      this.setState({ messages: [...mapped, ...this.state.messages] });
-      this.setState({
-        loadEarlier: messages.hasPrevPage,
-        messageIndex: messages.items[0].index,
-      });
+      this.handleBatch(messages);
     });
     this.setState({
       connectionState: 'Connected',
@@ -132,31 +134,57 @@ export default class App extends Component {
     });
   }
 
-  handleReceive = (message) => {
-    const newMsg = this.parseMessage(message);
+  handleBatch = async (messages) => {
+    const messageArray = [];
+    for (let i = 0; i < messages.items.length; i += 1) {
+      // eslint-disable-next-line
+      messageArray[i] = await this.parseMessage(messages.items[i]);
+    }
+    this.setState({
+      messages: [...this.state.messages, ...messageArray.reverse()],
+      loadEarlier: messages.hasPrevPage,
+      messageIndex: messages.items[0].index,
+    });
+  }
+
+  handleReceive = async (message) => {
+    const newMsg = await this.parseMessage(message);
     this.setState({ messages: [newMsg, ...this.state.messages] });
   }
 
-  parseMessage = (message) => {
+  parseMessage = async (message) => {
     const newMsg = {
       _id: message.sid,
       text: message.body,
+      type: message.type,
       createdAt: new Date(message.timestamp),
       attributes: message.attributes,
       system: message.system || false,
       user: {
         _id: message.author,
-        avatar: 'https://github.com/Blue0X/TwilioChatDemo/assets/avatar-girl.png',
+        avatar: 'https://raw.githubusercontent.com/Blue0X/TwilioChatDemo/master/assets/avatar-girl.png',
       },
     };
 
     if (message.type === 'media') {
-      newMsg.type = 'media';
-      newMsg.media = message.media;
+      newMsg.image = await message.media.getContentUrl();
     }
 
     return newMsg;
   };
+
+  renderFooter = () => {
+    if (this.state.uploading) {
+      return (
+        <View style={STYLES.footerContainer}>
+          <Text style={STYLES.footerText}>
+            Uploading...
+          </Text>
+        </View>
+      );
+    }
+    return null;
+  }
 
   render() {
     return (
@@ -170,6 +198,7 @@ export default class App extends Component {
               loadEarlier={this.state.loadEarlier}
               isLoadingEarlier={this.state.isLoadingEarlier}
               onLoadEarlier={this.onLoadEarlier}
+              renderFooter={this.renderFooter}
             />
             <Button title="Send photo" onPress={this.onSendPhoto} />
             <Modal
@@ -180,7 +209,7 @@ export default class App extends Component {
                 this.setModalVisible(false);
               }}
             >
-              <SafeAreaView>
+              <SafeAreaView style={{ flex: 1 }}>
                 <Button title="Done" onPress={this.onSelectDone} />
                 <CameraRollPicker
                   maximum={1}
