@@ -4,6 +4,7 @@ import { Client as TwilioChatClient } from 'twilio-chat';
 import { GiftedChat } from 'react-native-gifted-chat';
 import CameraRollPicker from 'react-native-camera-roll-picker';
 import RNFetchBlob from 'rn-fetch-blob';
+import CustomMessageImage from './CustomMessageImage';
 
 async function getToken(identity) {
   // eslint-disable-next-line no-undef
@@ -198,6 +199,7 @@ export default class App extends Component {
               loadEarlier={this.state.loadEarlier}
               isLoadingEarlier={this.state.isLoadingEarlier}
               onLoadEarlier={this.onLoadEarlier}
+              renderMessageImage={props => <CustomMessageImage {...props} />}
               renderFooter={this.renderFooter}
             />
             <Button title="Send photo" onPress={this.onSendPhoto} />

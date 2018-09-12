@@ -15,10 +15,13 @@
   "dependencies": {
     "buffer": "^5.2.1",
     "events": "^3.0.0",
+    "prop-types": "^15.6.2",
     "react": "16.4.1",
     "react-native": "0.56.1",
     "react-native-camera-roll-picker": "^1.2.3",
     "react-native-gifted-chat": "^0.4.3",
+    "react-native-image-progress": "^1.1.1",
+    "react-native-progress": "^3.5.0",
     "rn-fetch-blob": "^0.10.13",
     "twilio-chat": "^3.0.2",
     "util": "^0.11.0"
