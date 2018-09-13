@@ -139,6 +139,9 @@ export default class App extends Component {
     // await this.client.getSubscribedChannels();
     try {
       this.channel = await this.client.getChannelByUniqueName('general');
+      if (this.channel.status !== 'joined' && this.channel.status !== 'invited') {
+        this.channel.join();
+      }
     } catch (error) {
       this.channel = await this.client.createChannel({
         uniqueName: 'general',
@@ -158,6 +161,8 @@ export default class App extends Component {
   }
 
   handleBatch = async (messages) => {
+    if (messages.items.length === 0) return;
+
     const messageArray = [];
     for (let i = 0; i < messages.items.length; i += 1) {
       // eslint-disable-next-line
